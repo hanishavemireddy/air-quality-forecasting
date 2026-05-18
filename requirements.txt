@@ -1,0 +1,16 @@
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+folium
+missingno
+statsmodels
+pmdarima
+prophet
+xgboost
+scikit-learn
+tensorflow
+keras
+shap
+jupyter

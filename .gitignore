@@ -1,0 +1,17 @@
+# Data
+data/raw/*.csv
+data/raw/*.zip
+data/processed/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.env
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
