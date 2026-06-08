@@ -5,6 +5,9 @@ import os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
+from tenacity import retry, stop_after_attempt, wait_exponential
+#Above is for retrying the API call if it fails
+
 load_dotenv()
 
 logging.basicConfig(
@@ -26,7 +29,8 @@ BASE_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 
 
 # ── fetch ─────────────────────────────────────────────────────
-
+#stopping afer 3 attempts, with exponential backoff starting at 2s and maxing out at 30s
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=30))
 def fetch_aqi(city, past_days=7):
     """
     Pull hourly PM2.5 for a city from Open-Meteo.
@@ -46,7 +50,7 @@ def fetch_aqi(city, past_days=7):
     }
 
     try:
-        resp = requests.get(BASE_URL, params=params, timeout=15)
+        resp = requests.get(BASE_URL, params=params, timeout=15) #REST API call with a 15s timeout
         resp.raise_for_status()
         log.info(f"{city}: got response ({resp.elapsed.total_seconds():.2f}s)")
         return resp.json()
