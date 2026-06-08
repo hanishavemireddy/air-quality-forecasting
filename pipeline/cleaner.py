@@ -100,6 +100,10 @@ def flag_outliers(df, window=30*24, iqr_factor=3.0):
 
 #SARIMA and Prophet require continuous data without gaps to run properly, 
 #so we need to fill in any missing hours.
+
+# Cleaned rows will outnumber raw rows because this step resamples to a full hourly grid
+# and fills in hours where the sensor didn't report. Those filled rows are marked
+# is_imputed=True so models and analysts can treat them differently if needed.
 def impute_gaps(df):
     """
     Resample to hourly, forward-fill short gaps (up to 2 hours),
@@ -112,8 +116,11 @@ def impute_gaps(df):
         city_df = df[df["city"] == city].copy()
         city_df = city_df.set_index("timestamp").sort_index()
 
-        # remember which timestamps already had real readings
-        original_times = set(city_df.index)
+        # strip timezone info so comparisons work cleanly
+        city_df.index = city_df.index.tz_localize(None)
+
+        # remember original timestamps as a set of strings for reliable comparison
+        original_times = set(city_df.index.astype(str))
 
         # resample to hourly — introduces NaN rows for missing hours
         city_df = city_df.resample("1h").first()
@@ -128,8 +135,9 @@ def impute_gaps(df):
         # linear interpolation for anything longer
         city_df["value"] = city_df["value"].interpolate(method="linear")
 
-        # mark rows that weren't in the original data
-        city_df["is_imputed"] = ~city_df.index.isin(original_times)
+        # mark rows that weren't in the original data using string comparison to avoid timezone issues
+        city_df["is_imputed"] = ~city_df.index.astype(str).isin(original_times)
+
 
         imputed_count = city_df["is_imputed"].sum()
         if imputed_count > 0:
@@ -137,7 +145,7 @@ def impute_gaps(df):
 
         city_df = city_df.reset_index()
         frames.append(city_df)
-
+        
     return pd.concat(frames, ignore_index=True)
 
 

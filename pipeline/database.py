@@ -86,18 +86,33 @@ def store_raw(df):
 
     return len(new_rows)
 
-
 def store_cleaned(df):
-    """Write cleaned rows to cleaned_readings."""
+    """Write cleaned rows to cleaned_readings, skipping duplicates."""
     if df.empty:
         return 0
 
     df["cleaned_at"] = datetime.utcnow().isoformat()
 
     with engine.begin() as conn:
-        conn.execute(cleaned_readings.insert(), df.to_dict(orient="records"))
+        existing = conn.execute(
+            cleaned_readings.select().with_only_columns(
+                cleaned_readings.c.city,
+                cleaned_readings.c.timestamp
+            )
+        ).fetchall()
 
-    return len(df)
+        existing_keys = {(r.city, r.timestamp) for r in existing}
+
+        new_rows = [
+            row for _, row in df.iterrows()
+            if (row["city"], row["timestamp"]) not in existing_keys
+        ]
+
+        if new_rows:
+            conn.execute(cleaned_readings.insert(), [r.to_dict() for r in new_rows])
+
+    return len(new_rows)
+
 
 
 def log_run(city, rows_fetched, rows_rejected, rows_stored, error_msg=None):
