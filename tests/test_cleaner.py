@@ -132,3 +132,9 @@ def test_validate_all_good_rows_pass():
 
     assert rejected == 0
     assert len(clean_df) == 10
+
+
+# Use this command to run the tests:
+# pytest tests/test_cleaner.py -v
+# The above line runs the tests in verbose mode, 
+# showing which tests passed or failed along with any print statements for debugging.    

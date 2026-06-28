@@ -61,5 +61,24 @@ def run_pipeline(past_days=7):
             )
 
 
+# if __name__ == "__main__":
+#     run_pipeline(past_days=7)
+
+# Adding a backfill to ensure SARIMA (mainly) and Prophet have enough data to capture seasonality.
+# By default, it fetches 7 days of data, but you can specify up to 90 days for a backfill.
 if __name__ == "__main__":
-    run_pipeline(past_days=7)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--backfill",
+        type=int,
+        default=7,
+        help="number of past days to fetch (default 7, use 90 for backfill)"
+    )
+    args = parser.parse_args()
+
+    run_pipeline(past_days=args.backfill)
+
+    ### Use this command on terminal to run with a backfill of 90 days:
+    # python pipeline/run_pipeline.py --backfill 90

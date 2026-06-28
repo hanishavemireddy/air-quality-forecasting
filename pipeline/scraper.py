@@ -64,7 +64,8 @@ def fetch_aqi(city, past_days=7):
 def parse_to_df(raw, city):
     """
     Turn the Open-Meteo response into a tidy DataFrame.
-    Drops rows where PM2.5 is null (sensor gaps are common).
+    Drops rows where PM2.5 is null (sensor gaps are common), 
+    - Uncomment the commented lines and block drop lines if cleaner.py has to do imputation.
     """
     if not raw or "hourly" not in raw:
         log.warning(f"{city}: no hourly data in response")
@@ -90,8 +91,46 @@ def parse_to_df(raw, city):
     if dropped > 0:
         log.info(f"{city}: dropped {dropped} null readings")
 
-    log.info(f"{city}: {len(df)} clean rows")
+    # keep null rows — cleaner.py handles imputation
+    # just log how many so we can track data quality
+    # null_count = df["value"].isna().sum()
+    # if null_count > 0:
+    #     log.info(f"{city}: {null_count} null readings will be imputed in cleaner")
+
+    # log.info(f"{city}: {len(df)} total rows (including nulls)")
+
+    log.info(f"{city}: {len(df)} total rows (excluding nulls)")
+
     return df
+
+# def parse_to_df(raw, city):
+#     """
+#     Turn the Open-Meteo response into a tidy DataFrame.
+#     Keeps null rows so cleaner.py can impute them properly.
+#     """
+#     if not raw or "hourly" not in raw:
+#         log.warning(f"{city}: no hourly data in response")
+#         return pd.DataFrame()
+
+#     df = pd.DataFrame({
+#         "timestamp": raw["hourly"]["time"],
+#         "value":     raw["hourly"]["pm2_5"],
+#     })
+
+#     df["city"]       = city
+#     df["parameter"]  = "pm2_5"
+#     df["unit"]       = "µg/m³"
+#     df["fetched_at"] = datetime.now(timezone.utc).isoformat()
+
+#     df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+#     # keep null rows — cleaner.py handles imputation
+#     null_count = df["value"].isna().sum()
+#     if null_count > 0:
+#         log.info(f"{city}: {null_count} null readings will be imputed in cleaner")
+
+#     log.info(f"{city}: {len(df)} total rows (including nulls)")
+#     return df
 
 
 # ── main ──────────────────────────────────────────────────────

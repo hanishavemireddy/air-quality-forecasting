@@ -43,7 +43,8 @@ ts-forecast-dashboard/
 ├── tests/
 │   └── test_cleaner.py         # unit tests for the cleaning pipeline
 ├── notebooks/                  
-│   └── eda_geospatial.ipynb                # EDA notebook
+│   └── eda_geospatial.ipynb        # EDA notebook for a downloaded dataset
+│   └── 01_eda.ipynb                # EDA notebook for scrapped data
 │   └── missing_data_imputation.ipynb       # Ways to deal with missing notebook(TBD)
 │   └── classical_models_sarima_ets.ipynb   # (for future)
 │   └── ml_dl_models_prophet_xgb_lstm.ipynb # (for future)

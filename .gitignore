@@ -2,6 +2,7 @@
 data/raw/*.csv
 data/raw/*.zip
 data/processed/*.csv
+data/*.db
 
 # Python
 __pycache__/
