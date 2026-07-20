@@ -10,7 +10,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
-def fit_and_forecast(series, horizon, freq, m, seasonality_mode = "additive", changepoint_prior_scale = 0.05, add_holidays=False) -> pd.DataFrame:
+def fit_and_forecast(series, horizon, freq, m, seasonality_mode = "additive",
+                      changepoint_prior_scale = 0.05, add_holidays=False) -> pd.DataFrame:
     """
     Fit a Prophet model to the provided time series and forecast future values.
     

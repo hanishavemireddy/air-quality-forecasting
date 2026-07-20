@@ -157,19 +157,19 @@ def test_chronos_la():
 
 
 if __name__ == "__main__":
-    # print("testing Chicago...")
-    # test_sarima_chicago()
+    print("testing Chicago...")
+    test_sarima_chicago()
 
-    # print("\ntesting LA...")
-    # test_sarima_la()
+    print("\ntesting LA...")
+    test_sarima_la()
 
-    # print("\nall SARIMA tests passed.")
+    print("\nall SARIMA tests passed.")
 
-    # print("testing Chicago...")
-    # test_prophet_chicago()
+    print("testing Chicago...")
+    test_prophet_chicago()
 
-    # print("\ntesting LA...")
-    # test_prophet_la()
+    print("\ntesting LA...")
+    test_prophet_la()
 
     print("testing Chicago...")
     test_chronos_chicago()
