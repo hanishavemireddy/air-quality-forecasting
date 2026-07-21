@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+
+  pipeline:
+    build: .
+    command: python pipeline/run_pipeline.py
+    volumes:
+      - ./data:/app/data    # shares the aqi.db between both services
+    environment:
+      - PYTHONUNBUFFERED=1  # makes logs appear immediately
+
+  dashboard:
+    build: .
+    command: python dashboard/app.py
+    ports:
+      - "8050:8050"
+    volumes:
+      - ./data:/app/data    # same shared volume — reads from same aqi.db
+    depends_on:
+      - pipeline            # dashboard waits for pipeline to start first
+    environment:
+      - PYTHONUNBUFFERED=1

@@ -1,0 +1,26 @@
+# python
+venv311/
+venv/
+__pycache__/
+*.pyc
+.env
+
+# data
+data/
+*.db
+
+# notebooks output
+notebooks/.ipynb_checkpoints/
+
+# model cache
+.cache/
+*.cache
+
+# huggingface cache
+~/.cache/
+
+# git
+.git/
+
+# misc
+*.log
