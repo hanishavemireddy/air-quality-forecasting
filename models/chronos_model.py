@@ -102,4 +102,5 @@ def log_run(city, freq, horizon, forecast_df, y_test):
         mlflow.log_metric("mase", metrics["MASE"])
 
         log.info(f"MLflow run logged — Chronos {city}")
+        # mlflow.sklearn.log_model()
 

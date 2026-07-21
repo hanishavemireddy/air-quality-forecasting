@@ -79,5 +79,6 @@ def log_run(city, freq, m, horizon, model, forecast_df, y_test):
         mlflow.log_metric("mase", metrics["MASE"])
 
         log.info(f"MLflow run logged — SARIMA {city}")
+        # mlflow.sklearn.log_model()
 
 
