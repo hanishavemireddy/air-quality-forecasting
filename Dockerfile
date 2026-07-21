@@ -1,3 +1,5 @@
+# New-Item .DockerFile -ItemType File ~ Terminal Command to create the file
+
 # use a slim Python 3.11 image as the base
 FROM python:3.11-slim
 

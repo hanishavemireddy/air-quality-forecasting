@@ -1,3 +1,6 @@
+# New-Item .dockerignore -ItemType File ~ Terminal Command to create the file
+
+
 # python
 venv311/
 venv/

@@ -84,5 +84,22 @@ def fit_and_forecast(series, horizon, freq) -> pd.DataFrame:
 
     return forecast_df
 
+def log_run(city, freq, horizon, forecast_df, y_test):
+    """Log a Chronos experiment run to MLflow."""
+    import mlflow
+    from models.evaluator import evaluate_model
 
+    with mlflow.start_run(run_name=f"chronos_{city}"):
+        mlflow.log_param("model",   "Chronos")
+        mlflow.log_param("city",    city)
+        mlflow.log_param("freq",    freq)
+        mlflow.log_param("horizon", horizon)
+
+        metrics = evaluate_model(y_test, forecast_df["yhat"].values)
+        mlflow.log_metric("rmse", metrics["RMSE"])
+        mlflow.log_metric("mae",  metrics["MAE"])
+        mlflow.log_metric("mape", metrics["MAPE"])
+        mlflow.log_metric("mase", metrics["MASE"])
+
+        log.info(f"MLflow run logged — Chronos {city}")
 

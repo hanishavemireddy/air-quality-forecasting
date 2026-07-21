@@ -56,6 +56,28 @@ def fit_and_forecast(series, horizon, freq, m) -> pd.DataFrame:
         'upper_ci': conf_int[:, 1]
     }, index=horizon_times)
 
-    return forecast_df_with_ci
+    return forecast_df_with_ci, model
+
+def log_run(city, freq, m, horizon, model, forecast_df, y_test):
+    """Log a SARIMA experiment run to MLflow."""
+    import mlflow
+    from models.evaluator import evaluate_model
+
+    with mlflow.start_run(run_name=f"sarima_{city}"):
+        mlflow.log_param("model",          "SARIMA")
+        mlflow.log_param("city",           city)
+        mlflow.log_param("freq",           freq)
+        mlflow.log_param("m",              m)
+        mlflow.log_param("horizon",        horizon)
+        mlflow.log_param("order",          str(model.order))
+        mlflow.log_param("seasonal_order", str(model.seasonal_order))
+
+        metrics = evaluate_model(y_test, forecast_df["yhat"].values)
+        mlflow.log_metric("rmse", metrics["RMSE"])
+        mlflow.log_metric("mae",  metrics["MAE"])
+        mlflow.log_metric("mape", metrics["MAPE"])
+        mlflow.log_metric("mase", metrics["MASE"])
+
+        log.info(f"MLflow run logged — SARIMA {city}")
 
 

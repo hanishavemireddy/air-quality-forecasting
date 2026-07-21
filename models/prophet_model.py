@@ -91,4 +91,27 @@ def fit_and_forecast(series, horizon, freq, m, seasonality_mode = "additive",
 
     return forecast_df_with_ci
 
+def log_run(city, freq, m, horizon, forecast_df, y_test,
+            seasonality_mode="additive", changepoint_prior_scale=0.05,
+            add_holidays=False):
+    """Log a Prophet experiment run to MLflow."""
+    import mlflow
+    from models.evaluator import evaluate_model
 
+    with mlflow.start_run(run_name=f"prophet_{city}"):
+        mlflow.log_param("model",                    "Prophet")
+        mlflow.log_param("city",                     city)
+        mlflow.log_param("freq",                     freq)
+        mlflow.log_param("m",                        m)
+        mlflow.log_param("horizon",                  horizon)
+        mlflow.log_param("seasonality_mode",         seasonality_mode)
+        mlflow.log_param("changepoint_prior_scale",  changepoint_prior_scale)
+        mlflow.log_param("add_holidays",             add_holidays)
+
+        metrics = evaluate_model(y_test, forecast_df["yhat"].values)
+        mlflow.log_metric("rmse", metrics["RMSE"])
+        mlflow.log_metric("mae",  metrics["MAE"])
+        mlflow.log_metric("mape", metrics["MAPE"])
+        mlflow.log_metric("mase", metrics["MASE"])
+
+        log.info(f"MLflow run logged — Prophet {city}")
