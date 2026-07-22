@@ -3,13 +3,15 @@ from sqlalchemy import create_engine, Table, Column, MetaData
 from sqlalchemy import Integer, Float, String, DateTime, Boolean, Text
 from datetime import datetime
 
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "aqi.db")
+
 
 # ── engine ────────────────────────────────────────────────────
 
 # creates the data/ folder if it doesn't exist yet
-os.makedirs("data", exist_ok=True)
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-engine   = create_engine("sqlite:///data/aqi.db", echo=False)
+engine   = create_engine(f"sqlite:///{DB_PATH}", echo=False)
 metadata = MetaData()
 
 #engine is the connection to the database,
