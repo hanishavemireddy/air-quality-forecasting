@@ -111,6 +111,67 @@ forecast_chart = dcc.Loading(
     )
 )
 
+# ── data explorer ───────────────────────────────────────────────────────────────
+
+explorer_content = html.Div([
+    # data quality summary cards
+    dbc.Row([
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.P("Total Rows", className="text-muted mb-1", style={"fontSize": "12px"}),
+                html.H5(id="explorer-total-rows", children="--", className="mb-0"),
+            ])
+        ], className="text-center shadow-sm"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.P("% Imputed", className="text-muted mb-1", style={"fontSize": "12px"}),
+                html.H5(id="explorer-imputed", children="--", className="mb-0"),
+            ])
+        ], className="text-center shadow-sm"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.P("% Flagged", className="text-muted mb-1", style={"fontSize": "12px"}),
+                html.H5(id="explorer-flagged", children="--", className="mb-0"),
+            ])
+        ], className="text-center shadow-sm"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.P("Date Range", className="text-muted mb-1", style={"fontSize": "12px"}),
+                html.H5(id="explorer-date-range", children="--", className="mb-0"),
+            ])
+        ], className="text-center shadow-sm"), width=3),
+    ], className="mb-3"),
+
+    # toggle checklist
+    dcc.Checklist(
+        id="explorer-toggles",
+        options=[
+            {"label": "  Show imputed points", "value": "imputed"},
+            {"label": "  Show flagged outliers", "value": "flagged"},
+        ],
+        value=["imputed", "flagged"],
+        inline=True,
+        className="mb-2",
+        style={"fontSize": "13px"},
+    ),
+
+    # chart
+    dcc.Loading(
+        type="circle",
+        children=dcc.Graph(
+            id="explorer-chart",
+            style={"height": "420px"},
+            figure={},
+            config={"displayModeBar": True, "displaylogo": False},
+        )
+    ),
+])
+
+
+
 # ── full layout ───────────────────────────────────────────────────────────────
 
 layout = dbc.Container([
@@ -145,13 +206,32 @@ layout = dbc.Container([
             })
         ], width=3),
 
-        # right side — metrics + chart
+        # right side — tabbed contents
         dbc.Col([
-            html.Div(className="mt-3"),   # spacing
-            metric_cards,
-            forecast_chart,
+            dcc.Loading(
+                id="loading-tabs",
+                type="circle",
+                children=dcc.Tabs(
+                    id="main-tabs",
+                    value="tab-forecast",
+                    children=[
+                        dcc.Tab(label="Forecast", value="tab-forecast", children=[
+                            html.Div(className="mt-3"),
+                            metric_cards,
+                            forecast_chart,
+                        ]),
+                        dcc.Tab(label="Data Explorer", value="tab-explorer", children=[
+                            html.Div(explorer_content, className="mt-3"),
+                        ]),
+                    ]
+                )
+            ),
         ], width=9),
 
     ]),
 
 ], fluid=True)
+
+# Only printing for debugging
+# print("layout built — tabs:", [tab.label for tab in layout.children[1].children[1].children[0].children])
+

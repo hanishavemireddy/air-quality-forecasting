@@ -270,11 +270,13 @@ def register_callbacks(app):
         Output("explorer-imputed",    "children"),
         Output("explorer-flagged",    "children"),
         Output("explorer-date-range", "children"),
-        Input("main-tabs",        "active_tab"),
+        Input("main-tabs",        "value"),
         Input("city-dropdown",    "value"),
         Input("explorer-toggles", "value"),
     )
     def update_explorer(active_tab, city, toggles):
+        
+        print(f"explorer called: active_tab={active_tab}, city={city}")
 
         # only run when Data Explorer tab is active
         if active_tab != "tab-explorer":
