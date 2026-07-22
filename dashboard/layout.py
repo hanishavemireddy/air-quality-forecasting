@@ -208,6 +208,14 @@ pipeline_log_content = html.Div([
     html.Div(id="pipeline-log-table"),
 ])
 
+# ── model comparisons ────────────────────────────────────────────────────────────
+
+comparison_content = html.Div([
+    html.H6("Model Comparison — from MLflow", className="mt-3 mb-2 text-muted"),
+    html.Div(id="comparison-table"),
+    dcc.Graph(id="comparison-chart", style={"height": "350px"}, figure={}),
+])
+
 
 
 # ── full layout ───────────────────────────────────────────────────────────────
@@ -264,10 +272,9 @@ layout = dbc.Container([
                         dcc.Tab(label="Pipeline Log", value="tab-pipeline", children=[
                             html.Div(pipeline_log_content, className="mt-3"),
                         ]),
-                        # dcc.Tab(label="Pipeline Log", value="tab-pipeline", children=[
-                        #     html.Div(pipeline_log_content, className="mt-3"),
-                        #     dcc.Interval(id="pipeline-log-interval", interval=5000, n_intervals=0),
-                        # ]),
+                       dcc.Tab(label="Model Comparison", value="tab-comparison", children=[
+                        html.Div(comparison_content, className="mt-3"),
+                        ]),
                     ]
                 )
             ),

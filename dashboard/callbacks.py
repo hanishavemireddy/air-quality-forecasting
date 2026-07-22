@@ -445,3 +445,91 @@ def register_callbacks(app):
         ], striped=True, hover=True, size="sm", className="mt-2")
 
         return table, last_run, rows_fetched, rows_stored, error_count
+    
+
+    # ── callback 5: model comparison from MLflow ──────────────────────
+    @app.callback(
+        Output("comparison-table", "children"),
+        Output("comparison-chart", "figure"),
+        Input("main-tabs",    "value"),
+        Input("city-dropdown", "value"),
+    )
+    def update_comparison(active_tab, city):
+
+        if active_tab != "tab-comparison":
+            return None, {}
+
+        import mlflow
+        mlflow.set_tracking_uri("sqlite:///mlflow.db")
+        client = mlflow.tracking.MlflowClient()
+        exp    = client.get_experiment_by_name("aqi-forecasting")
+
+        if exp is None:
+            return html.P("No MLflow experiments found.", className="text-muted"), {}
+
+        runs = client.search_runs(
+            exp.experiment_id,
+            filter_string=f"params.city = '{city}'",
+            order_by=["start_time DESC"],
+        )
+
+        if not runs:
+            return html.P(f"No runs found for {city}.", className="text-muted"), {}
+
+        # get latest run per model
+        latest = {}
+        for run in runs:
+            model = run.data.params.get("model")
+            if model and model not in latest:
+                latest[model] = run
+
+        # build metrics DataFrame
+        rows = []
+        for model, run in latest.items():
+            rows.append({
+                "Model":    model,
+                "RMSE":     round(run.data.metrics.get("rmse", 0), 3),
+                "MAE":      round(run.data.metrics.get("mae", 0), 3),
+                "MAPE":     round(run.data.metrics.get("mape", 0), 3),
+                "MASE":     round(run.data.metrics.get("mase", 0), 3),
+            })
+
+        metrics_df = pd.DataFrame(rows)
+
+        # highlight winner per metric
+        def make_row(row):
+            cells = [html.Td(row["Model"])]
+            for metric in ["RMSE", "MAE", "MAPE", "MASE"]:
+                best = metrics_df[metric].min()
+                style = {"backgroundColor": "#d4edda", "fontWeight": "bold"} if row[metric] == best else {}
+                cells.append(html.Td(str(row[metric]), style=style))
+            return html.Tr(cells)
+
+        table = dbc.Table([
+            html.Thead(html.Tr([
+                html.Th("Model"), html.Th("RMSE"), html.Th("MAE"),
+                html.Th("MAPE"), html.Th("MASE")
+            ])),
+            html.Tbody([make_row(row) for _, row in metrics_df.iterrows()])
+        ], striped=True, hover=True, size="sm", className="mb-3")
+
+        # bar chart — RMSE comparison
+        fig = go.Figure()
+        for _, row in metrics_df.iterrows():
+            fig.add_trace(go.Bar(
+                name=row["Model"],
+                x=["RMSE", "MAE", "MAPE", "MASE"],
+                y=[row["RMSE"], row["MAE"], row["MAPE"], row["MASE"]],
+            ))
+
+        fig.update_layout(
+            title=dict(text=f"{city} — Model Metrics Comparison", x=0.5),
+            barmode="group",
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            yaxis=dict(showgrid=True, gridcolor="#f5f5f5"),
+            legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+            margin=dict(l=40, r=20, t=50, b=80),
+        )
+
+        return table, fig
