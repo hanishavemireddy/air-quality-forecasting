@@ -465,36 +465,61 @@ def register_callbacks(app):
         exp    = client.get_experiment_by_name("aqi-forecasting")
 
         if exp is None:
-            return html.P("No MLflow experiments found.", className="text-muted"), {}
+            if exp is None:
+            # MLflow runs locally — show static metrics from notebook results
+            static_data = {
+                "Chicago": [
+                    {"Model": "SARIMA",  "RMSE": 5.90, "MAE": 3.70, "MAPE": 0.255, "MASE": 0.628},
+                    {"Model": "Prophet", "RMSE": 5.99, "MAE": 3.89, "MAPE": 0.281, "MASE": 0.660},
+                    {"Model": "Chronos", "RMSE": 8.02, "MAE": 6.18, "MAPE": 0.441, "MASE": 1.049},
+                ],
+                "Los Angeles": [
+                    {"Model": "SARIMA",  "RMSE": 3.87, "MAE": 3.03, "MAPE": 0.212, "MASE": 2.945},
+                    {"Model": "Prophet", "RMSE": 3.75, "MAE": 3.07, "MAPE": 0.162, "MASE": 2.985},
+                    {"Model": "Chronos", "RMSE": 3.39, "MAE": 2.50, "MAPE": 0.165, "MASE": 2.429},
+                ],
+                "San Jose": [
+                    {"Model": "SARIMA",  "RMSE": 2.83, "MAE": 2.23, "MAPE": 0.166, "MASE": 6.345},
+                    {"Model": "Prophet", "RMSE": 4.82, "MAE": 4.57, "MAPE": 0.353, "MASE": 13.007},
+                    {"Model": "Chronos", "RMSE": 2.82, "MAE": 2.43, "MAPE": 0.186, "MASE": 6.934},
+                ],
+            }
+            metrics_df = pd.DataFrame(static_data.get(city, static_data["Chicago"]))
+            note = html.P(
+                "MLflow runs locally. Showing metrics from notebook evaluation.",
+                className="text-muted mb-2",
+                style={"fontSize": "12px"}
+            )
+        else:
+            runs = client.search_runs(
+                exp.experiment_id,
+                filter_string=f"params.city = '{city}'",
+                order_by=["start_time DESC"],
+            )
 
-        runs = client.search_runs(
-            exp.experiment_id,
-            filter_string=f"params.city = '{city}'",
-            order_by=["start_time DESC"],
-        )
+            if not runs:
+                return html.P(f"No runs found for {city}.", className="text-muted"), {}
 
-        if not runs:
-            return html.P(f"No runs found for {city}.", className="text-muted"), {}
+            # get latest run per model
+            latest = {}
+            for run in runs:
+                model = run.data.params.get("model")
+                if model and model not in latest:
+                    latest[model] = run
 
-        # get latest run per model
-        latest = {}
-        for run in runs:
-            model = run.data.params.get("model")
-            if model and model not in latest:
-                latest[model] = run
+            # build metrics DataFrame
+            rows = []
+            for model, run in latest.items():
+                rows.append({
+                    "Model":    model,
+                    "RMSE":     round(run.data.metrics.get("rmse", 0), 3),
+                    "MAE":      round(run.data.metrics.get("mae", 0), 3),
+                    "MAPE":     round(run.data.metrics.get("mape", 0), 3),
+                    "MASE":     round(run.data.metrics.get("mase", 0), 3),
+                })
 
-        # build metrics DataFrame
-        rows = []
-        for model, run in latest.items():
-            rows.append({
-                "Model":    model,
-                "RMSE":     round(run.data.metrics.get("rmse", 0), 3),
-                "MAE":      round(run.data.metrics.get("mae", 0), 3),
-                "MAPE":     round(run.data.metrics.get("mape", 0), 3),
-                "MASE":     round(run.data.metrics.get("mase", 0), 3),
-            })
-
-        metrics_df = pd.DataFrame(rows)
+            metrics_df = pd.DataFrame(rows)
+            note = html.Div()  # no note when MLflow is available
 
         # highlight winner per metric
         def make_row(row):
@@ -532,4 +557,4 @@ def register_callbacks(app):
             margin=dict(l=40, r=20, t=50, b=80),
         )
 
-        return table, fig
+        return html.Div([note, table]), fig

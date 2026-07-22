@@ -98,6 +98,23 @@ metric_cards = dbc.Row([
     ], className="text-center shadow-sm"), width=3),
 ], className="mb-3")
 
+
+
+# ── about section ─────────────────────────────────────────────────────────────
+
+about_section = dbc.Row([
+    dbc.Col([
+        html.P(
+            "This dashboard tracks hourly PM2.5 air quality for Chicago, Los Angeles, and San Jose. "
+            "A daily pipeline scrapes live data from Open-Meteo, cleans it, and stores it in a database. "
+            "Three forecasting models — SARIMA, Prophet, and Chronos — are compared side by side with "
+            "confidence intervals, anomaly flags, and evaluation metrics.",
+            className="text-muted mb-0",
+            style={"fontSize": "13px"}
+        ),
+    ], width=12),
+], className="mt-2 mb-3 px-2")
+
 # ── forecast chart ────────────────────────────────────────────────────────────
 
 forecast_chart = dcc.Loading(
@@ -223,6 +240,7 @@ comparison_content = html.Div([
 layout = dbc.Container([
 
     navbar,
+    about_section,    
 
     dbc.Row([
 
@@ -260,20 +278,20 @@ layout = dbc.Container([
                 children=dcc.Tabs(
                     id="main-tabs",
                     value="tab-forecast",
-                    children=[
-                        dcc.Tab(label="Forecast", value="tab-forecast", children=[
-                            html.Div(className="mt-3"),
-                            metric_cards,
-                            forecast_chart,
-                        ]),
+                    children=[                        
                         dcc.Tab(label="Data Explorer", value="tab-explorer", children=[
                             html.Div(explorer_content, className="mt-3"),
                         ]),
-                        dcc.Tab(label="Pipeline Log", value="tab-pipeline", children=[
-                            html.Div(pipeline_log_content, className="mt-3"),
+                        dcc.Tab(label="Forecast", value="tab-forecast", children=[
+                            html.Div(className="mt-3"), 
+                            metric_cards, 
+                            forecast_chart,
                         ]),
                        dcc.Tab(label="Model Comparison", value="tab-comparison", children=[
                         html.Div(comparison_content, className="mt-3"),
+                        ]),
+                        dcc.Tab(label="Pipeline Log", value="tab-pipeline", children=[
+                            html.Div(pipeline_log_content, className="mt-3"),
                         ]),
                     ]
                 )
