@@ -1,13 +1,17 @@
 """
 Main entry point for the Plotly Dash dashboard.
-Run with: python dashboard/app.py
+Run with: python -m dashboard.app
 Then open http://localhost:8050
 """
-print("app.py starting...")
 
 import os
+import sys
+sys.path.append(".")
+
 import dash
 import dash_bootstrap_components as dbc
+
+print("app.py starting...")
 
 # initialise the app with a clean Bootstrap theme
 app = dash.Dash(
@@ -16,14 +20,21 @@ app = dash.Dash(
     title="AQI Forecasting Dashboard"
 )
 
+print("app initialized")
+
 # import layout and callbacks after app is created
 from dashboard.layout import layout
 from dashboard.callbacks import register_callbacks
 
+print("importing done")
+
 app.layout = layout
+
+print("app layout read")
 
 register_callbacks(app)
 
+print("app callbacks received")
 
 if __name__ == "__main__":
     app.run(

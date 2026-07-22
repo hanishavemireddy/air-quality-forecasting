@@ -67,8 +67,14 @@ def register_callbacks(app):
             freq, m = "h", 24
 
         # step 3 — train/test split
-        train = series[:-horizon]
-        test  = series[-horizon:]
+        # use last 30 days of training data for all cities
+        # keeps SARIMA fast on hourly data
+        if city == "Chicago":
+            train = series[:-horizon]
+        else:
+            train = series[-30*24-horizon:-horizon]
+
+        test = series[-horizon:]
 
         # step 4 — fit selected models
         forecasts = {}
@@ -121,7 +127,7 @@ def register_callbacks(app):
         ))
 
         # anomaly markers — only within visible window
-        context_start  = train.index[-30]
+        context_start = train.index[-30]
         visible_anomalies = anomaly_points[
             anomaly_points["timestamp"] >= pd.to_datetime(context_start)
         ]
@@ -184,7 +190,7 @@ def register_callbacks(app):
                 marker=dict(size=4)
             ))
 
-        # x-axis range — 30 periods of context + full forecast window
+        # x-axis range
         x_end = (
             list(forecasts.values())[-1]["ds"].iloc[-1]
             if forecasts
@@ -233,7 +239,6 @@ def register_callbacks(app):
         # step 7 — metrics on first selected model
         if forecasts:
             first_forecast = list(forecasts.values())[0]
-            # align lengths — forecast_future may be shorter than test
             first_future = first_forecast[
                 first_forecast["ds"] > pd.to_datetime(train.index[-1])
             ]

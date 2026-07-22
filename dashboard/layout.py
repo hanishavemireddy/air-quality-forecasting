@@ -63,6 +63,8 @@ run_button = dbc.Button(
     className="mt-3 w-100",
 )
 
+
+
 # ── metric cards ──────────────────────────────────────────────────────────────
 
 metric_cards = dbc.Row([
@@ -97,11 +99,15 @@ metric_cards = dbc.Row([
 
 # ── forecast chart ────────────────────────────────────────────────────────────
 
-forecast_chart = dcc.Graph(
-    id="forecast-chart",
-    style={"height": "420px"},
-    figure={},
-    config={"displayModeBar": False},   # hide the plotly toolbar
+forecast_chart = dcc.Loading(
+    id="loading-forecast",
+    type="circle",        # spinner style — circle, dot, or cube
+    children=dcc.Graph(
+        id="forecast-chart",
+        style={"height": "420px"},
+        figure={},
+        config={"displayModeBar": False},
+    )
 )
 
 # ── full layout ───────────────────────────────────────────────────────────────
