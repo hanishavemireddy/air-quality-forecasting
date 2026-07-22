@@ -8,12 +8,12 @@ sys.path.append(".")
 import sqlite3
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, State
+from dash import Input, Output, State, html
 from models import sarima_model, prophet_model, chronos_model
 from models.anomaly import detect_anomalies
 from models.evaluator import evaluate_model
 from pipeline.database import DB_PATH
-
+import dash_bootstrap_components as dbc
 
 def register_callbacks(app):
 
@@ -275,8 +275,8 @@ def register_callbacks(app):
         Input("explorer-toggles", "value"),
     )
     def update_explorer(active_tab, city, toggles):
-        
-        print(f"explorer called: active_tab={active_tab}, city={city}")
+        # Only for debugging
+        #print(f"explorer called: active_tab={active_tab}, city={city}")
 
         # only run when Data Explorer tab is active
         if active_tab != "tab-explorer":
@@ -379,3 +379,69 @@ def register_callbacks(app):
         )
 
         return fig, str(total_rows), pct_imputed, pct_flagged, date_range
+    
+
+    # ── callback 4: pipeline log ──────────────────────────────────────
+    @app.callback(
+        Output("pipeline-log-table", "children"),
+        Output("log-last-run",       "children"),
+        Output("log-rows-fetched",   "children"),
+        Output("log-rows-stored",    "children"),
+        Output("log-errors",         "children"),
+        Input("main-tabs", "value"),
+    )
+    def update_pipeline_log(active_tab):
+
+        print(f"pipeline log called: active_tab={active_tab}")
+        if active_tab != "tab-pipeline":
+            return None, "--", "--", "--", "--"
+
+        # load pipeline log from database
+        conn = sqlite3.connect(DB_PATH)
+        log_df = pd.read_sql("""
+            SELECT run_at, city, rows_fetched, rows_rejected,
+                   rows_stored, error_msg
+            FROM pipeline_log
+            ORDER BY run_at DESC
+            LIMIT 50
+        """, conn)
+        conn.close()
+
+        if log_df.empty:
+            return html.P("No pipeline runs found.", className="text-muted"), "--", "--", "--", "--"
+
+        # summary cards — most recent run
+        latest      = log_df.iloc[0]
+        last_run    = latest["run_at"][:16]   # trim seconds
+        rows_fetched = str(log_df["rows_fetched"].sum())
+        rows_stored  = str(log_df["rows_stored"].sum())
+        error_count  = str(log_df["error_msg"].notna().sum())
+
+        # build table
+        table = dbc.Table([
+            html.Thead(html.Tr([
+                html.Th("Run at"),
+                html.Th("City"),
+                html.Th("Fetched"),
+                html.Th("Rejected"),
+                html.Th("Stored"),
+                html.Th("Status"),
+            ])),
+            html.Tbody([
+                html.Tr([
+                    html.Td(row["run_at"][:16]),
+                    html.Td(row["city"]),
+                    html.Td(row["rows_fetched"]),
+                    html.Td(row["rows_rejected"]),
+                    html.Td(row["rows_stored"]),
+                    html.Td(
+                        html.Span("Error", className="badge bg-danger")
+                        if pd.notna(row["error_msg"])
+                        else html.Span("OK", className="badge bg-success")
+                    ),
+                ])
+                for _, row in log_df.iterrows()
+            ])
+        ], striped=True, hover=True, size="sm", className="mt-2")
+
+        return table, last_run, rows_fetched, rows_stored, error_count

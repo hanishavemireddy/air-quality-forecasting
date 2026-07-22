@@ -170,6 +170,44 @@ explorer_content = html.Div([
     ),
 ])
 
+# ── log pipelines ───────────────────────────────────────────────────────────────
+
+pipeline_log_content = html.Div([
+    dbc.Row([
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.P("Last Run", className="text-muted mb-1", style={"fontSize": "12px"}),
+                html.H5(id="log-last-run", children="--", className="mb-0"),
+            ])
+        ], className="text-center shadow-sm"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.P("Rows Fetched", className="text-muted mb-1", style={"fontSize": "12px"}),
+                html.H5(id="log-rows-fetched", children="--", className="mb-0"),
+            ])
+        ], className="text-center shadow-sm"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.P("Rows Stored", className="text-muted mb-1", style={"fontSize": "12px"}),
+                html.H5(id="log-rows-stored", children="--", className="mb-0"),
+            ])
+        ], className="text-center shadow-sm"), width=3),
+
+        dbc.Col(dbc.Card([
+            dbc.CardBody([
+                html.P("Errors", className="text-muted mb-1", style={"fontSize": "12px"}),
+                html.H5(id="log-errors", children="--", className="mb-0"),
+            ])
+        ], className="text-center shadow-sm"), width=3),
+    ], className="mb-3"),
+
+    # run history table
+    html.H6("Run History", className="mt-3 mb-2 text-muted"),
+    html.Div(id="pipeline-log-table"),
+])
+
 
 
 # ── full layout ───────────────────────────────────────────────────────────────
@@ -223,6 +261,13 @@ layout = dbc.Container([
                         dcc.Tab(label="Data Explorer", value="tab-explorer", children=[
                             html.Div(explorer_content, className="mt-3"),
                         ]),
+                        dcc.Tab(label="Pipeline Log", value="tab-pipeline", children=[
+                            html.Div(pipeline_log_content, className="mt-3"),
+                        ]),
+                        # dcc.Tab(label="Pipeline Log", value="tab-pipeline", children=[
+                        #     html.Div(pipeline_log_content, className="mt-3"),
+                        #     dcc.Interval(id="pipeline-log-interval", interval=5000, n_intervals=0),
+                        # ]),
                     ]
                 )
             ),
