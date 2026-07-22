@@ -8,10 +8,8 @@ import os
 import sys
 sys.path.append(".")
 
-import dash
-import dash_bootstrap_components as dbc
-
-print("app.py starting...")
+from pipeline.database import create_tables, DB_PATH
+from pipeline.run_pipeline import run_pipeline
 
 # seed the database on first run if it doesn't exist or is empty
 if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) < 1000:
@@ -20,30 +18,24 @@ if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) < 1000:
     run_pipeline(past_days=90)
     print("backfill complete")
 
-print("Getting the Data")
+import dash
+import dash_bootstrap_components as dbc
 
-# initialise the app with a clean Bootstrap theme
+print("app.py starting...")
+
 app = dash.Dash(
     __name__,
     external_stylesheets=[dbc.themes.FLATLY],
     title="AQI Forecasting Dashboard"
 )
 
-print("app initialized")
+server = app.server  # needed for gunicorn
 
-# import layout and callbacks after app is created
 from dashboard.layout import layout
 from dashboard.callbacks import register_callbacks
 
-print("importing done")
-
 app.layout = layout
-
-print("app layout read")
-
 register_callbacks(app)
-
-print("app callbacks received")
 
 if __name__ == "__main__":
     app.run(
