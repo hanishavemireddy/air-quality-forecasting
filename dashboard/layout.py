@@ -65,6 +65,7 @@ run_button = dbc.Button(
 
 
 
+
 # ── metric cards ──────────────────────────────────────────────────────────────
 
 metric_cards = dbc.Row([
@@ -106,7 +107,7 @@ forecast_chart = dcc.Loading(
         id="forecast-chart",
         style={"height": "420px"},
         figure={},
-        config={"displayModeBar": False},
+        config={"displayModeBar": True},
     )
 )
 
@@ -131,6 +132,11 @@ layout = dbc.Container([
                 horizon_slider,
 
                 run_button,
+
+                html.P("Refresh page to cancel a running forecast.",
+                       className="text-muted mt-1", 
+                       style={"fontSize": "11px"}),
+
             ], style={
                 "backgroundColor": "#f8f9fa",
                 "padding": "16px",

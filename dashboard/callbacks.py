@@ -107,10 +107,16 @@ def register_callbacks(app):
         # step 6 — build figure
         fig = go.Figure()
 
+        # show last 30 days of context regardless of frequency
+        if city == "Chicago":
+            context_periods = 30        # 30 days
+        else:
+            context_periods = 30 * 24   # 30 days worth of hours
+
         # historical line — 30 periods before test window starts
         fig.add_trace(go.Scatter(
-            x=train[-30:].index,
-            y=train[-30:].values,
+            x=train[-context_periods:].index,
+            y=train[-context_periods:].values,
             mode="lines",
             name="Historical",
             line=dict(color="#aaaaaa", width=1)
@@ -127,7 +133,7 @@ def register_callbacks(app):
         ))
 
         # anomaly markers — only within visible window
-        context_start = train.index[-30]
+        context_start = train.index[-context_periods]
         visible_anomalies = anomaly_points[
             anomaly_points["timestamp"] >= pd.to_datetime(context_start)
         ]
