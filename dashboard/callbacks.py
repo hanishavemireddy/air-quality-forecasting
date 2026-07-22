@@ -261,3 +261,119 @@ def register_callbacks(app):
             rmse = mae = mape = n_anomalies = "--"
 
         return fig, rmse, mae, mape, n_anomalies
+    
+    
+    # ── callback 3: data explorer ─────────────────────────────────────
+    @app.callback(
+        Output("explorer-chart",      "figure"),
+        Output("explorer-total-rows", "children"),
+        Output("explorer-imputed",    "children"),
+        Output("explorer-flagged",    "children"),
+        Output("explorer-date-range", "children"),
+        Input("main-tabs",        "active_tab"),
+        Input("city-dropdown",    "value"),
+        Input("explorer-toggles", "value"),
+    )
+    def update_explorer(active_tab, city, toggles):
+
+        # only run when Data Explorer tab is active
+        if active_tab != "tab-explorer":
+            return {}, "--", "--", "--", "--"
+
+        # load raw and cleaned data
+        conn = sqlite3.connect(DB_PATH)
+
+        raw = pd.read_sql(f"""
+            SELECT timestamp, value
+            FROM raw_readings
+            WHERE city = '{city}'
+            ORDER BY timestamp
+        """, conn, parse_dates=["timestamp"])
+
+        cleaned = pd.read_sql(f"""
+            SELECT timestamp, value, is_imputed, is_outlier_flag
+            FROM cleaned_readings
+            WHERE city = '{city}'
+            ORDER BY timestamp
+        """, conn, parse_dates=["timestamp"])
+
+        conn.close()
+
+        # data quality summary
+        total_rows   = len(cleaned)
+        pct_imputed  = f"{cleaned['is_imputed'].mean()*100:.1f}%"
+        pct_flagged  = f"{cleaned['is_outlier_flag'].mean()*100:.1f}%"
+        date_range   = (f"{cleaned['timestamp'].min().strftime('%b %d')} "
+                        f"to {cleaned['timestamp'].max().strftime('%b %d, %Y')}")
+
+        # build figure
+        fig = go.Figure()
+
+        # cleaned series as base line
+        fig.add_trace(go.Scatter(
+            x=cleaned["timestamp"],
+            y=cleaned["value"],
+            mode="lines",
+            name="Cleaned",
+            line=dict(color="#aaaaaa", width=1)
+        ))
+
+        # imputed points
+        if "imputed" in (toggles or []):
+            imputed = cleaned[cleaned["is_imputed"] == True]
+            if not imputed.empty:
+                fig.add_trace(go.Scatter(
+                    x=imputed["timestamp"],
+                    y=imputed["value"],
+                    mode="markers",
+                    name="Imputed",
+                    marker=dict(color="orange", size=5, symbol="circle"),
+                ))
+
+        # flagged outliers
+        if "flagged" in (toggles or []):
+            flagged = cleaned[cleaned["is_outlier_flag"] == True]
+            if not flagged.empty:
+                fig.add_trace(go.Scatter(
+                    x=flagged["timestamp"],
+                    y=flagged["value"],
+                    mode="markers",
+                    name="Outlier flagged",
+                    marker=dict(color="red", size=6, symbol="x"),
+                ))
+
+        fig.update_layout(
+            title=dict(
+                text=f"{city} — Raw vs Cleaned Data",
+                x=0.5,
+                font=dict(size=14)
+            ),
+            xaxis=dict(
+                showgrid=False,
+                showline=True,
+                linecolor="#cccccc",
+                tickformat="%b %d" if city == "Chicago" else "%b %d %H:%M",
+                tickangle=-45,
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridcolor="#f5f5f5",
+                showline=False,
+                zeroline=False,
+                title="PM2.5 (µg/m³)",
+            ),
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.15,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=11)
+            ),
+            margin=dict(l=50, r=20, t=50, b=80),
+            hovermode="x unified",
+        )
+
+        return fig, str(total_rows), pct_imputed, pct_flagged, date_range
