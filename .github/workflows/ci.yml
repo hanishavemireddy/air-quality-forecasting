@@ -1,4 +1,6 @@
-name: CI #Continous Integration - every time code is pushed, tests run automatically
+name: CI/CD
+# Continous Integration - every time code is pushed, tests run automatically,
+# Continous Deployment - every time code passes tests, it is directly deployed to production
 
 on:
   push:
@@ -24,3 +26,15 @@ jobs:
 
       - name: Run tests
         run: pytest tests/test_cleaner.py -v
+
+  deploy:
+    needs: test              # only runs if test job passes
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'   # only deploy on main branch
+
+    steps:
+      - name: Deploy to Railway
+        uses: bervProject/railway-deploy@main
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: ${{ secrets.RAILWAY_SERVICE_ID }}
