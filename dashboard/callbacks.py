@@ -465,7 +465,6 @@ def register_callbacks(app):
         exp    = client.get_experiment_by_name("aqi-forecasting")
 
         if exp is None:
-            if exp is None:
             # MLflow runs locally — show static metrics from notebook results
             static_data = {
                 "Chicago": [
