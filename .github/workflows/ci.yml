@@ -28,13 +28,18 @@ jobs:
         run: pytest tests/test_cleaner.py -v
 
   deploy:
-    needs: test              # only runs if test job passes
+    needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'   # only deploy on main branch
+    if: github.ref == 'refs/heads/main'
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
       - name: Deploy to Railway
-        uses: bervProject/railway-deploy@main
-        with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: ${{ secrets.RAILWAY_SERVICE_ID }}
+        run: railway up --service ${{ secrets.RAILWAY_SERVICE_ID }} --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
