@@ -13,6 +13,15 @@ import dash_bootstrap_components as dbc
 
 print("app.py starting...")
 
+# seed the database on first run if it doesn't exist or is empty
+if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) < 1000:
+    print("database not found — running backfill...")
+    create_tables()
+    run_pipeline(past_days=90)
+    print("backfill complete")
+
+print("Getting the Data")
+
 # initialise the app with a clean Bootstrap theme
 app = dash.Dash(
     __name__,
